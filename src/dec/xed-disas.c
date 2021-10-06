@@ -405,6 +405,14 @@ static void xml_tag_pi(xed_print_info_t* pi,
     pi->blen = xml_tag(pi->buf, pi->blen, tag, value);
 }
 
+static void
+print_operand(xed_print_info_t* pi) {
+    char buf[11];
+    xed_sprintf_uint32(buf, pi->operand_indx, XED_HEX_BUFLEN);
+    xed_pi_strcat(pi, "<OPERAND index=\"");
+    xed_pi_strcat(pi, buf);
+    xed_pi_strcat(pi, "\">");
+}
 
 static void xed_operand_spacer(xed_print_info_t* pi) {
     if (pi->emitted) {
@@ -432,8 +440,10 @@ static void print_seg_prefix_for_suppressed_operands(
             if (seg != XED_REG_INVALID &&
                 xed_operand_values_using_default_segment(ov, i) == 0) {
                 xed_operand_spacer(pi);
-                if (pi->format_options.xml_a)
-                    xed_pi_strcat(pi,"<OPERAND><REG bits=\"16\">");
+                if (pi->format_options.xml_a) {
+                    print_operand(pi);
+                    xed_pi_strcat(pi,"<REG bits=\"16\">");
+                }
                 pi->blen = xed_strncat_lower(pi->buf,
                                              xed_reg_enum_t2str(seg),
                                              pi->blen); 
@@ -747,8 +757,8 @@ static void xed_print_operand( xed_print_info_t* pi )
     xed_operand_spacer(pi);
     pi->emitted = 1;
     if (pi->format_options.xml_a)
-        xed_pi_strcat(pi,"<OPERAND>");
-    
+        print_operand(pi);
+
     switch(xed_operand_name(op)) {
       case XED_OPERAND_AGEN:
       case XED_OPERAND_MEM0: {
